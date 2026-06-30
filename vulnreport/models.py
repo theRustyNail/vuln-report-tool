@@ -25,4 +25,5 @@ class ScoredFinding:
     cvss_base_score: Optional[float] = None
     severity: Optional[str] = None
     matched: bool = False
+    status: str = "no_match"
     notes: str = ""
