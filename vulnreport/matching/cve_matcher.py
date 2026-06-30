@@ -7,9 +7,9 @@ Two parts make up this stage:
 
 Each finding is assigned one of three statuses:
 
-  STATUS_DIRECT        matched against the curated signature file
-  STATUS_TOOL_DECIDED  matched by a best-effort lookup, lower confidence
-  STATUS_NONE          no usable match
+  STATUS_DIRECT        product and version matched a signature
+  STATUS_TOOL_DECIDED  product is known, but the version is outside the rule
+  STATUS_NONE          product is not in any signature
 
 This stage sets cve_id, matched and status only. The CVSS score is filled in by
 the scoring stage (the CVSS calculator), so it is left as None here.
@@ -23,7 +23,7 @@ from pathlib import Path
 from vulnreport.models import Finding, ScoredFinding
 
 # Status values recorded on each ScoredFinding.status
-STATUS_DIRECT = "direct"
+STATUS_DIRECT = "direct_match"
 STATUS_TOOL_DECIDED = "tool_decided"
 STATUS_NONE = "no_match"
 
@@ -117,30 +117,40 @@ def version_matches(finding_version, signature):
 
 
 def match_one(finding: Finding, signatures: list[dict]) -> ScoredFinding:
-    """Match one finding to a CVE and assign one of the three statuses."""
-    # Tier 1: direct match against the curated signature file.
+    """Match a single finding and assign one of the three statuses.
+
+    Tier 1 (direct): product and version both match a signature.
+    Tier 2 (tool-decided): the product matches a signature but the version does
+        not, so the software is recognised but this version cannot be confirmed.
+    Tier 3 (no match): the product is not in any signature.
+    """
+    product_seen = False
+
     for signature in signatures:
-        if finding.product == signature.get("product") and version_matches(
-            finding.version, signature
-        ):
-            return ScoredFinding(
-                finding=finding,
-                cve_id=signature["cve"],
-                matched=True,
-                status=STATUS_DIRECT,
-                notes="direct match from signature file",
-            )
+        if finding.product == signature.get("product"):
+            product_seen = True
+            if version_matches(finding.version, signature):
+                return ScoredFinding(
+                    finding=finding,
+                    cve_id=signature["cve"],
+                    matched=True,
+                    status=STATUS_DIRECT,
+                    notes="direct signature match",
+                )
 
-    # Tier 2: tool-decided (best-effort), lower confidence.
-    # TODO (design decision). Decide what this tier does, then set
-    # status=STATUS_TOOL_DECIDED and justify it.
+    if product_seen:
+        return ScoredFinding(
+            finding=finding,
+            matched=False,
+            status=STATUS_TOOL_DECIDED,
+            notes="known product, version outside the signature's range",
+        )
 
-    # Tier 3: no usable match.
     return ScoredFinding(
         finding=finding,
         matched=False,
         status=STATUS_NONE,
-        notes="no signature match",
+        notes="no signature for this product",
     )
 
 

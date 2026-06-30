@@ -6,6 +6,7 @@ from vulnreport.matching.cve_matcher import (
     version_matches,
     match_one,
     STATUS_DIRECT,
+    STATUS_TOOL_DECIDED,
     STATUS_NONE,
 )
 
@@ -55,14 +56,17 @@ def test_range_match_via_version_max():
     assert sf.status == STATUS_DIRECT
 
 
-def test_patched_version_does_not_match():
+def test_patched_version_is_tool_decided():
+    # Apache is a known product, but 2.4.51 is outside the signature's range,
+    # so no CVE is asserted (still a true negative) and the status is tier 2.
     sf = match_one(_finding("Apache httpd", "2.4.51"), SIGNATURES)
     assert sf.matched is False
     assert sf.cve_id is None
-    assert sf.status == STATUS_NONE
+    assert sf.status == STATUS_TOOL_DECIDED
 
 
 def test_unknown_product_does_not_match():
     sf = match_one(_finding("MySQL", "5.0.51a"), SIGNATURES)
     assert sf.matched is False
+    assert sf.cve_id is None
     assert sf.status == STATUS_NONE
