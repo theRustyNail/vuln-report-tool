@@ -1,0 +1,76 @@
+{
+  "_about": "Answer key for the TM470 vulnerability-tool evaluation. The ground truth for each target is the CVE that the pinned image is documented to carry, and that CVE's NVD CVSS v3.x base score, confirmed with the project's own NVD client (get_cvss). It is kept separate from the tool's signature file on purpose, so the evaluation is a genuine check and not the tool marking its own work. Any version marked TBC must be read from the real Nmap output once the lab is stood up.",
+  "cvss_source": "NVD v3.x base score via vulnreport.nvd.client.get_cvss",
+  "targets": [
+    {
+      "id": "apache-2.4.49",
+      "service": "Apache httpd",
+      "version": "2.4.49",
+      "vulnerable": true,
+      "expected_cve": "CVE-2021-41773",
+      "expected_score": 9.8,
+      "cvss_version": "3.1",
+      "note": "Path traversal / RCE. Exploitable only in certain configurations, so matching on version alone over-flags. Included to expose that limit in the precision figure."
+    },
+    {
+      "id": "apache-2.4.50",
+      "service": "Apache httpd",
+      "version": "2.4.50",
+      "vulnerable": true,
+      "expected_cve": "CVE-2021-42013",
+      "expected_score": 9.8,
+      "cvss_version": "3.1",
+      "note": "Incomplete fix for CVE-2021-41773."
+    },
+    {
+      "id": "vsftpd-2.3.4",
+      "service": "vsftpd",
+      "version": "2.3.4",
+      "vulnerable": true,
+      "expected_cve": "CVE-2011-2523",
+      "expected_score": 9.8,
+      "cvss_version": "3.1",
+      "note": "Backdoored build. Nmap reads the version cleanly."
+    },
+    {
+      "id": "samba-sambacry",
+      "service": "Samba",
+      "version": "TBC",
+      "vulnerable": true,
+      "expected_cve": "CVE-2017-7494",
+      "expected_score": 9.8,
+      "cvss_version": "3.1",
+      "note": "SambaCry. Read the exact version from the scan. Nmap often reports a Samba version range rather than a pinned number, which is worth recording as a matching limitation."
+    },
+    {
+      "id": "openssh-7.7",
+      "service": "OpenSSH",
+      "version": "7.7",
+      "vulnerable": true,
+      "expected_cve": "CVE-2018-15473",
+      "expected_score": 5.3,
+      "cvss_version": "3.1",
+      "note": "Username enumeration, OpenSSH <= 7.7. The one mid-severity target, so it gives MAE and RMSE some spread."
+    },
+    {
+      "id": "nginx-resolver",
+      "service": "nginx",
+      "version": "1.20.0",
+      "vulnerable": true,
+      "expected_cve": "CVE-2021-23017",
+      "expected_score": 7.7,
+      "cvss_version": "3.1",
+      "note": "Resolver off-by-one. Only exploitable when the resolver directive is configured, so like CVE-2021-41773 it is config-dependent and version-only matching can over-flag. Confirm the version against the scanned image. Gives the HIGH-band point for MAE/RMSE spread."
+    },
+    {
+      "id": "apache-2.4.51",
+      "service": "Apache httpd",
+      "version": "2.4.51",
+      "vulnerable": false,
+      "expected_cve": null,
+      "expected_score": null,
+      "cvss_version": null,
+      "note": "Patched release. The tool should NOT flag CVE-2021-41773 or CVE-2021-42013 here. Provides true negatives for precision and recall."
+    }
+  ]
+}
