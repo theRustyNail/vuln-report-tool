@@ -74,7 +74,6 @@ second scanner could be added later; attempting OpenVAS at this stage would
 put the core deliverable at risk for a scoping addition. Recorded as a realised
 risk rather than a change of plan.
 
-## 2 July 2026
 
 ## 2 July 2026
 
@@ -109,4 +108,15 @@ division rounds some valid CVSS intermediates the wrong way (the 0.1 + 0.2
 problem noted in Appendix A of the specification). I followed the spec's
 integer-arithmetic method instead, scaling by 100,000 before rounding, which is
 why the calculator agrees with NVD's published scores rather than being just out of range for close cases.
+
+## 3 July 2026
+tried the first Vulhub target. Cloned the repo, ran docker compose up
+on httpd/CVE-2021-41773, and Apache 2.4.49 came up on port 8080 without
+any problems. Nmap -sV read the service as "Apache httpd 2.4.49" correctly.
+Fed the XML into the tool and the report came back with CVE-2021-41773
+scored 9.8 Critical - the expected result, but produced end to end from
+a real container rather than the bundled sample. One target of seven in
+the answer key done. The interesting ones (Samba, which Nmap often
+version-ranges rather than pinning; and the patched 2.4.51 negative)
+are still to run.
 
