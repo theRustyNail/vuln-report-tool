@@ -7,6 +7,7 @@ from vulnreport import config
 from vulnreport.matching.cve_matcher import match_findings
 from vulnreport.parsing.nmap import parse_nmap_xml
 from vulnreport.reporting.report import build_markdown, write_report
+from vulnreport.scoring.scorer import score_findings
 
 
 def build_arg_parser():
@@ -32,6 +33,7 @@ def run(scan_path, name="scan"):
     """Run the full pipeline and return the findings, scored findings and path."""
     findings = parse_nmap_xml(scan_path)
     scored = match_findings(findings)
+    scored = score_findings(scored)
     report = build_markdown(scored, target_name=name)
     out_path = write_report(report, target_name=name)
     return findings, scored, out_path
