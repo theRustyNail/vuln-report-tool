@@ -1,30 +1,48 @@
 # Vulnerability reporting tool
 
-A command-line tool that reads network scanner output (Nmap first), matches the
-findings to CVE identifiers, retrieves CVSS v3.1 base scores from the NIST
-National Vulnerability Database (NVD), and produces a structured vulnerability
-report.
+A command-line tool that reads network scanner output (Nmap first), matches
+the findings to CVE (Common Vulnerabilities and Exposures) identifiers,
+retrieves the corresponding CVSS (Common Vulnerability Scoring System) v3.1
+vectors from the NIST National Vulnerability Database (NVD), computes the
+base scores with its own CVSS calculator, and produces a structured
+vulnerability report.
 
 This is a TM470 project and is under active development.
 
 ## Status
 
-Early. The repository is being built up one stage at a time:
+Pipeline complete end to end; evaluation module and lab work in progress.
 
-- [ ] Nmap XML parser
-- [ ] CVE matching
-- [ ] NVD lookup and local cache
-- [ ] Report generation (Markdown, then HTML)
-- [ ] Evaluation (mean absolute error against NVD baseline scores, and timing)
+- [x] Nmap XML parser
+- [x] CVE matching (curated signatures, three-tier status)
+- [x] NVD lookup and local cache
+- [x] CVSS v3.1 base score calculator
+- [x] Report generation (Markdown)
+- [ ] Evaluation (MAE over the lab answer key, and report production time)
 
 ## Requirements
 
 - Python 3.10 or newer
-- The packages listed in `requirements.txt` (added in a later step)
+- The packages listed in `requirements.txt`
 
 ## Setup
 
-To be completed once the package and requirements are added.
+    git clone https://github.com/theRustyNail/vun-report-tool.git
+    cd vun-report-tool
+    python -m venv .venv
+    .venv\Scripts\activate
+    pip install -r requirements.txt
+
+Optional: copy `.env.example` to `.env` and add an NVD API key for a higher
+rate limit. The tool works without one.
+
+## Use
+
+    python -m vulnreport
+
+Runs the pipeline against the bundled sample scan and writes a Markdown
+report to `reports/`. Use `--scan <path>` to point it at another Nmap XML
+file and `--name <name>` to set the report filename.
 
 ## Use and authorisation
 

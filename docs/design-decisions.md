@@ -41,3 +41,50 @@ Evaluation uses mean absolute error and RMSE for the computed scores (a
 regression task), and precision, recall and a confusion matrix for the matching
 (a classification task). ROC was considered and set aside as less suitable for
 the scoring task.
+
+## 2026-07-02 — Refinement: what MAE actually measures, and dropping RMSE
+
+**Decision.** Keep MAE in the evaluation, but redefine it as an end-to-end
+measure over the whole answer key, not just the matched findings. Any target
+the tool fails to report contributes its full expected score as error, as if
+the tool had said 0. State openly in the report that agreement on correctly
+matched findings is expected by construction. RMSE, listed alongside MAE on
+17 June, is dropped.
+
+**Reasoning.**
+
+The 17 June entry argued that computing the score from the vector, rather
+than copying NVD's published score, stops the MAE being zero by definition.
+On review that argument is incomplete. The vector the calculator uses also
+comes from NVD, and a CVSS vector fully determines its score. So for any
+correctly matched finding the computed score must equal the published one,
+not because the tool is accurate but because the arithmetic is
+deterministic. An MAE taken only over matched findings would be near zero by
+construction and would mostly restate what the calculator's unit tests and
+the runtime cross-check already establish.
+
+Defined over the whole answer key, the metric does say something the
+matching metrics cannot. Precision and recall treat every miss as equal:
+failing to report the OpenSSH finding (5.3) counts the same as failing to
+report the vsftpd backdoor (9.8). Operationally those are not equal
+failures. With unreported targets contributing their expected score as
+error, MAE weights each failure by its severity, which is closer to what a
+user of the report would care about. This also fits the justification
+already cited in TMA02: Willmott and Matsuura (2005) favour MAE because it
+weights errors linearly rather than letting large ones dominate, which is
+the behaviour wanted here.
+
+RMSE is dropped because, with seven answer-key targets, the per-target error
+table in the results will already show whether errors are concentrated or
+spread — the one thing RMSE would add over MAE. Reporting both would be a
+second number without a second insight.
+
+**Consequences.**
+
+The evaluation module must compute MAE over all answer-key targets, with the
+unmatched-scores-as-zero convention, exclude the patched negative from the
+score error (it belongs to precision and recall), and present a per-target
+table of expected score, tool score and error. The TMA03 and EMA write-ups
+should state the limitation and the redefinition directly rather than
+leaving the question for the marker to raise, and the Key Terms glossary
+carried over from TMA02 must lose its RMSE entry.
