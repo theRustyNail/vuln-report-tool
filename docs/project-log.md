@@ -52,7 +52,7 @@ it and moved on. This is the first realised consequence of the version policy:
 some otherwise-good targets are unusable, and the answer key has to be built
 around what NVD scores under v3.x rather than around what would make a
 tidy demonstration.
-mplemented version_matches with range support and built the matcher out to
+Implemented version_matches with range support and built the matcher out to
 its three-tier status.
 The initial plan was a straightforward match / no-match: either the product
 and version fit a signature, or they did not. Working through the sample scan
@@ -76,24 +76,25 @@ risk rather than a change of plan.
 
 ## 2 July 2026
 
+## 2 July 2026
+
 Implemented _roundup for the CVSS calculator. First draft used
-math.floor(int_val / 10000), which works but does the division in
-floating point before. Switched to integer floor division
+math.floor(int_val / 10000) which works but does the division in
+floating point before flooring. Switched to integer floor division
 (int_val // 10000) to keep the rounding step in integer arithmetic,
 matching appendix A of the CVSS v3.1 specification
-(FIRST, 2019). added the math import as a result. Tests still to
+(FIRST, 2019). Dropped the math import as a result. Tests still to
 run once base_score is in.
 
-
-added the scoring stage into the pipeline. For each direct-match finding the
-CVE's vector string is fetched from NVD and scored by the projects own CVSS
+Added the scoring stage into the pipeline. For each direct-match finding the
+CVE's vector string is fetched from NVD and scored by the project's own CVSS
 calculator, rather than reading NVD's published score directly. This keeps the
-calculator on thecritical path as evidence that the implementation works, with
-NVD's score retained as a runtime cross-check: adiffrence beyond 0.05 is
-recorded in the findings notes. On the sample scan, vsftpd (CVE-2011-2523)
+calculator on the critical path as evidence that the implementation works, with
+NVD's score retained as a runtime cross-check: a difference beyond 0.05 is
+recorded in the finding's notes. On the sample scan, vsftpd (CVE-2011-2523)
 scores 9.8 Critical and OpenSSH (CVE-2018-15473) 5.3 Medium, both agreeing with
 NVD. The tool_decided and no_match findings are left unscored by design, since
-no CVE is uptainde for them.
+no CVE is asserted for them.
 Not everything went smoothly. The new scoring module failed to import at first
 (ModuleNotFoundError) because the file had been created at the top of the
 vulnreport package rather than inside its sub-folder. Moving it into
