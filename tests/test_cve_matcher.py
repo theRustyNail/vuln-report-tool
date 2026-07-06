@@ -8,6 +8,7 @@ from vulnreport.matching.cve_matcher import (
     STATUS_DIRECT,
     STATUS_TOOL_DECIDED,
     STATUS_NONE,
+    _parse_version
 )
 
 # (finding_version, signature, expected) for version_matches.
@@ -70,3 +71,7 @@ def test_unknown_product_does_not_match():
     assert sf.matched is False
     assert sf.cve_id is None
     assert sf.status == STATUS_NONE
+
+
+def test_unpinned_range_fails_closed():
+    assert _parse_version("3.X - 4.X") is None

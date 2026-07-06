@@ -53,6 +53,9 @@ def _parse_version(text):
     if not text or not isinstance(text, str):
         return None
 
+    if any(ch in text for ch in " -Xx"):
+        return None
+
     parts = []
     for part in text.split('.'):
         match = re.match(r'^(\d+)', part)

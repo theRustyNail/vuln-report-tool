@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE nmaprun>
+<?xml-stylesheet href="file:///C:/Program Files (x86)/Nmap/nmap.xsl" type="text/xsl"?>
+<!-- Nmap 7.99 scan initiated Mon Jul  6 17:41:43 2026 as: &quot;C:\\Program Files (x86)\\Nmap\\nmap.exe&quot; -sV -p 8081 -oX apache2451.xml 127.0.0.1 -->
+<nmaprun scanner="nmap" args="&quot;C:\\Program Files (x86)\\Nmap\\nmap.exe&quot; -sV -p 8081 -oX apache2451.xml 127.0.0.1" start="1783356103" startstr="Mon Jul  6 17:41:43 2026" version="7.99" xmloutputversion="1.05">
+<scaninfo type="syn" protocol="tcp" numservices="1" services="8081"/>
+<verbose level="0"/>
+<debugging level="0"/>
+<host starttime="1783356106" endtime="1783356112"><status state="up" reason="localhost-response" reason_ttl="0"/>
+<address addr="127.0.0.1" addrtype="ipv4"/>
+<hostnames>
+<hostname name="localhost" type="PTR"/>
+</hostnames>
+<ports><port protocol="tcp" portid="8081"><state state="open" reason="syn-ack" reason_ttl="128"/><service name="http" product="Apache httpd" version="2.4.51" extrainfo="(Unix)" method="probed" conf="10"><cpe>cpe:/a:apache:http_server:2.4.51</cpe></service></port>
+</ports>
+<times srtt="1000" rttvar="5000" to="100000"/>
+</host>
+<runstats><finished time="1783356112" timestr="Mon Jul  6 17:41:52 2026" summary="Nmap done at Mon Jul  6 17:41:52 2026; 1 IP address (1 host up) scanned in 9.27 seconds" elapsed="9.27" exit="success"/><hosts up="1" down="0" total="1"/>
+</runstats>
+</nmaprun>

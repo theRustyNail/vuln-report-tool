@@ -1,0 +1,12 @@
+{
+  "_about": "Maps each answer_key.json target id to the Nmap XML filename produced for it. Edit the filenames to match what you actually saved. A target with no file present is reported as 'not_run', which is kept distinct from a miss. Paths are resolved relative to --scans-dir (default: repo root).",
+  "scans": {
+    "apache-2.4.49": "apache2449.xml",
+    "apache-2.4.50": "apache2450.xml",
+    "vsftpd-2.3.4": "vsftpd.xml",
+    "samba-sambacry": "samba.xml",
+    "openssh-7.7": "openssh.xml",
+    "nginx-resolver": "nginx.xml",
+    "apache-2.4.51": "apache2451.xml"
+  }
+}
