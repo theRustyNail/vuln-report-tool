@@ -1,5 +1,5 @@
 {
-  "_about": "Signature file for the CVE matcher: curated product/version -> CVE mappings for the lab targets. This is the matcher's reference data, kept separate from the matching logic in cve_matcher.py and from data/answer_key.json (the independent evaluation ground truth). 'product' and 'version' must match what the Nmap parser writes onto Finding.product and Finding.version. Each entry uses either an exact 'version' or a 'version_min' / 'version_max' range. Confirm any value marked TBC against a real scan.",
+  "_about": "Signature file for the CVE matcher: curated product/version -> CVE mappings for the lab targets.",
   "signatures": [
     {"product": "Apache httpd", "version": "2.4.49", "cve": "CVE-2021-41773"},
     {"product": "Apache httpd", "version": "2.4.50", "cve": "CVE-2021-42013"},

@@ -4,7 +4,7 @@ This stage is deliberately separate from the tool's own reporting. It runs each
 lab scan through the existing parse -> match pipeline and compares the matcher's
 verdict against data/answer_key.json, which is independent ground truth.
 
-It measures *detection*, not scoring accuracy: did the tool identify the right
+It measures *detection*, not sscoring accuracy: did the tool identify the right
 CVE when it committed to a match, correctly decline when it could not, and avoid
 flagging the patched negative. The CVSS calculator is not exercised here, so the
 evaluation needs no network access.

@@ -1,5 +1,5 @@
 {
-  "_about": "Answer key for the TM470 vulnerability-tool evaluation. The ground truth for each target is the CVE that the pinned image is documented to carry, and that CVE's NVD CVSS v3.x base score, confirmed with the project's own NVD client (get_cvss). It is kept separate from the tool's signature file on purpose, so the evaluation is a genuine check and not the tool marking its own work. Any version marked TBC must be read from the real Nmap output once the lab is stood up.",
+  "_about": "Answer key for the TM470 vulnerability-tool evaluation.",
   "cvss_source": "NVD v3.x base score via vulnreport.nvd.client.get_cvss",
   "targets": [
     {
@@ -10,7 +10,7 @@
       "expected_cve": "CVE-2021-41773",
       "expected_score": 9.8,
       "cvss_version": "3.1",
-      "note": "Path traversal / RCE. Exploitable only in certain configurations, so matching on version alone over-flags. Included to expose that limit in the precision figure."
+      "note": "Path traversal / RCE. Exploitable only in certain configurations, so matching on version alone over-flags. Included to expose that limit in the precison figure."
     },
     {
       "id": "apache-2.4.50",
@@ -60,7 +60,7 @@
       "expected_cve": "CVE-2021-23017",
       "expected_score": 7.7,
       "cvss_version": "3.1",
-      "note": "Resolver off-by-one. Only exploitable when the resolver directive is configured, so like CVE-2021-41773 it is config-dependent and version-only matching can over-flag. Confirm the version against the scanned image. Gives the HIGH-band point for MAE/RMSE spread."
+      "note": "Resolver off-by-one. Only exploitable when the resolver directive is figured, so like CVE-2021-41773 it is config-dependent and version-only matching can over-flag. Confirm the version against the scanned image. Gives the HIGH-band point for MAE/RMSE spread."
     },
     {
       "id": "apache-2.4.51",

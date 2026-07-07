@@ -1,9 +1,4 @@
-﻿"""Compute a CVSS v3.1 base score from a vector string.
-
-parse_vector, WEIGHTS and severity are provided. base_score and _roundup are
-left to implement from the specification (cvss-v31-specification_r1.md in the
-project): they are the scored evidence that you understand the metric.
-"""
+﻿
 from __future__ import annotations
 
 import math
