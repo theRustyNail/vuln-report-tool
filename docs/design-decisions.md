@@ -87,3 +87,46 @@ per-target table of expected score, tool score and error. The TMA03 and EMA
 write-ups should state the limitation and the redefinition directly, so the
 marker isn't left to raise it. The Key Terms glossary carried over from TMA02
 loses its RMSE entry.
+
+## 2026-07-07 — MAE retired; the evaluation measures detection
+
+**Decision.** Drop MAE entirely. This supersedes the 2 July entry, which kept
+a redefined MAE. The primary evaluation metric is now CVE detection, measured
+with precision, recall and a confusion matrix. The CVSS calculator stays in
+the pipeline, with its unit tests and the runtime cross-check against NVD,
+but score error is no longer an evaluation metric.
+
+**Reasoning.**
+
+TMA02 proposed MAE between the tool's assigned CVSS scores and the NVD
+baseline as the primary metric. The 2 July entry found the circular flaw in
+that and tried to rescue the metric by redefining it over the whole answer
+key. On further review, the flaw goes deeper than the redefinition can fix.
+
+The base score is computed deterministically from the vector string, and the
+vector is retrieved from the same NVD source (via the local cache) that
+supplies the baseline. So for any correctly matched finding, the two numbers
+have to agree. That agreement shows the calculator implements the
+specification correctly. It says nothing about whether the tool found the
+right vulnerabilities. The TMA02 rationale would have held for a tool that
+estimated severity independently. This prototype doesn't, so the comparison
+is settled before it is run. MAE is retired, and precision and recall over
+detection take its place.
+
+**Consequences.**
+
+Precision and recall are computed only over targets where the tool commits to
+a direct-match decision. tool_decided targets, and targets not yet run, get
+their own rows and stay out of the headline figures.
+
+A direct match to the wrong CVE counts as one false positive. It is not also
+counted as a false negative, because that would double-count a single error.
+
+On the patched apache-2.4.51 target, the tool declined to assert a
+vulnerability. That tool_decided outcome is counted as a true negative, with
+a caveat recorded alongside it: the tool reached the right answer by failing
+to match a signature. It did not actively recognise the patch.
+
+The TMA03 and EMA write-ups must present this as a change from the TMA02
+plan, with the circularity given as the reason, and the 2 July entry's
+per-target score table is no longer needed.

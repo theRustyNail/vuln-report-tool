@@ -165,7 +165,7 @@ Ran Apache 2.4.50 next and it was clean. Nmap read "Apache httpd 2.4.50" on
 8080, and the tool matched CVE-2021-42013 at 9.8, which is what the answer
 key expects. Third direct match, alongside 2.4.49 and OpenSSH.
 
-Samba was a fight. The container wouldn't start because port 445 was already
+Samba was a problem. The container wouldn't start because port 445 was already
 taken. Windows holds 445 itself for file sharing (the System process, PID 4),
 so it wasn't something I could just kill. Remapped the published port to
 1445. First tried a compose override file, but that appended a second port
