@@ -200,3 +200,6 @@ stack underneath. First, correct the product string. Second, even after that,
 the "3.X - 4.X" version can't be confirmed against the vulnerable range, so
 Samba would still end up as tool_decided. Still to decide: fix the signature
 and rerun, or report the false negative as it stands and explain it.
+
+### 7 july
+this entry counts Apache 2.4.49 as a direct match three times, including in the hand-computed metrics (TP=3, recall 0.75). That was wrong — 2.4.49 was never scanned and it was formally deferred to the EMA on 7 July. The true state on 6 July was two direct matches (2.4.50, OpenSSH). The vsftpd deferral decision above therefore rested on a smaller detection set than stated, though the decision stands on the same redundancy reasoning. Actual evaluation results are in the 7 July entry and reports/evaluation.md.
