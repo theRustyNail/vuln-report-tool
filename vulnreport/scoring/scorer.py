@@ -10,7 +10,6 @@ from vulnreport.cvss.calculator import base_score, severity
 from vulnreport.nvd.client import get_cvss
 
 
-
 def _append_note(sf, text):
     sf.notes = f"{sf.notes} {text}".strip()
 

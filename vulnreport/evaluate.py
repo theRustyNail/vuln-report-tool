@@ -138,7 +138,10 @@ def classify(target, scored):
     elif sf.status == STATUS_TOOL_DECIDED:
         if not target["vulnerable"]:
             record["outcome"] = "TN"
-            record["note"] = "correctly asserted no CVE on the patched target (by non-match, not patch-recognition)"
+            record["note"] = (
+                "correctly asserted no CVE on the patched target "
+                "(by non-match, not patch-recognition)"
+            )
         else:
             record["outcome"] = "tool_decided"
             record["note"] = _decline_note(target, sf.finding)

@@ -1,7 +1,6 @@
 ﻿
 from __future__ import annotations
 
-import math
 
 # Metric weights from the CVSS v3.1 specification. Privileges Required is nested
 # under the Scope value because its weight changes when Scope is Changed.
@@ -65,10 +64,13 @@ def base_score(vector):
         return 0.0
 
     pr_weight = WEIGHTS["PR"][scope][metrics["PR"]]
-    exploitability = 8.22 * WEIGHTS["AV"][metrics["AV"]] * \
-                     WEIGHTS["AC"][metrics["AC"]] * \
-                     pr_weight * \
-                     WEIGHTS["UI"][metrics["UI"]]
+    exploitability = (
+        8.22
+        * WEIGHTS["AV"][metrics["AV"]]
+        * WEIGHTS["AC"][metrics["AC"]]
+        * pr_weight
+        * WEIGHTS["UI"][metrics["UI"]]
+    )
 
     if scope == "U":
         return _roundup(min(impact + exploitability, 10.0))

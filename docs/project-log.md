@@ -1,206 +1,172 @@
-﻿# Project log — TM470 vulnerability reporting tool
+# Project log — TM470 vulnerability reporting tool
 
-(Entries for 17 to 30 June were written up on 2 July from my working notes.
-Later entries were written on the day.)
+(Entries for 17 to 30 June were written up on 2 July from my working notes. Later entries were written on the day, except the 9 July to 3 August period, which was reconstructed on 4 August from notes, files and submission dates and is marked where memory rather than a record is the source.)
 
 ## 17 June 2026
-Started the build. Set up the repo, the vulnreport package scaffolding, and
-the Nmap parser, with a sample scan and its first tests.
 
-Also made the first design decision: matching will use a curated signature
-file covering the lab services, and the CVSS scores will come from the
-project's own calculator. Full reasoning is in design-decisions.md.
+Started the build. Set up the repo, the vulnreport package scaffolding, and the Nmap parser, with a sample scan and its first tests.
 
-I did look at a general CPE-to-CVE lookup first, and decided against it for
-the prototype. Nmap's service names don't map cleanly onto CPE identifiers,
-version strings come in all sorts of formats, and some services Nmap can't
-fingerprint at all. Getting that to work reliably would have been a project
-in itself, and it wouldn't have shown the decision-making the module rewards.
-The signature file gives a reliable core for the lab targets. The general
-lookup is written down as a possible extension.
+Also made the first design decision: matching will use a curated signature file covering the lab services, and the CVSS scores will come from the project's own calculator. Full reasoning is in design-decisions.md.
+
+I did look at a general CPE-to-CVE lookup first, and decided against it for the prototype. Nmap's service names don't map cleanly onto CPE identifiers, version strings come in all sorts of formats, and some services Nmap can't fingerprint at all. Getting that to work reliably would have been a project in itself, and it wouldn't have shown the decision-making the module rewards. The signature file gives a reliable core for the lab targets. The general lookup is written down as a possible extension.
 
 ## 18 June 2026
-Wired up the end-to-end pipeline: CLI entry point, report builder, and a
-matcher stub. Nothing matches yet, but python -m vulnreport now runs from
-parse to written report. That means every later stage has somewhere to plug
-in from day one.
+
+Wired up the end-to-end pipeline: CLI entry point, report builder, and a matcher stub. Nothing matches yet, but python \-m vulnreport now runs from parse to written report. That means every later stage has somewhere to plug in from day one.
 
 ## 24 June 2026
-Built the NVD lookup stage. A client queries the NVD API for a given CVE and
-pulls out its CVSS base score. Responses go into a JSON file cache, so repeat
-lookups during development and evaluation don't keep hitting the service.
 
-Applied the CVSS version policy decided earlier: use the v3.1 base score
-where one exists, fall back to v3.0 (the base formula is effectively the
-same), and exclude CVEs that only carry a v2 score. Each result records which
-version was used, so the report can state it. Added four offline tests for
-the selection logic.
+Built the NVD lookup stage. A client queries the NVD API for a given CVE and pulls out its CVSS base score. Responses go into a JSON file cache, so repeat lookups during development and evaluation don't keep hitting the service.
+
+Applied the CVSS version policy decided earlier: use the v3.1 base score where one exists, fall back to v3.0 (the base formula is effectively the same), and exclude CVEs that only carry a v2 score. Each result records which version was used, so the report can state it. Added four offline tests for the selection logic.
 
 Test run: 7 passing (3 Nmap parser, 4 NVD extract).
 
-Live check: CVE-2021-41773 came back with a CVSS v3.1 base score of 9.8
-(CRITICAL), and the response was cached.
+Live check: CVE-2021-41773 came back with a CVSS v3.1 base score of 9.8 (CRITICAL), and the response was cached.
 
-One thing to note from that result. CVE-2021-41773 shows the limits of
-matching on version alone. It is only exploitable in certain Apache
-configurations, and its published score varies between databases, so a host
-running that version isn't necessarily exploitable. The evaluation's
-precision and recall figures should pick this up, and the report needs to
-list it as a known limitation of version-based matching.
+One thing to note from that result. CVE-2021-41773 shows the limits of matching on version alone. It is only exploitable in certain Apache configurations, and its published score varies between databases, so a host running that version isn't necessarily exploitable. The evaluation's precision and recall figures should pick this up, and the report needs to list it as a known limitation of version-based matching.
 
 ## 30 June 2026
-Built the answer key for the evaluation. Six CVE-pinned targets across the
-CVSS bands 5.3, 7.7 and 9.8, plus one patched-version negative to check the
-tool doesn't flag things it shouldn't.
 
-One target got dropped along the way: ProFTPD 1.3.5 (CVE-2015-3306). It
-looked like a good fit. A real, well-known vulnerability, on a service Nmap
-reads cleanly. But NVD holds no v3.x score for it, only v2, and the version
-policy excludes v2. Keeping it would have meant bending the policy for one
-target, or scoring it differently from the others. So it went. This is the
-first time the version policy has actually cost me something: some
-otherwise-good targets are unusable, and the answer key has to be built
-around what NVD scores under v3.x.
+Built the answer key for the evaluation. Six CVE-pinned targets across the CVSS bands 5.3, 7.7 and 9.8, plus one patched-version negative to check the tool doesn't flag things it shouldn't.
 
-Implemented version_matches with range support and built the matcher out to
-its three-tier status.
+One target got dropped along the way: ProFTPD 1.3.5 (CVE-2015-3306). It looked like a good fit. A real, well-known vulnerability, on a service Nmap reads cleanly. But NVD holds no v3.x score for it, only v2, and the version policy excludes v2. Keeping it would have meant bending the policy for one target, or scoring it differently from the others. So it went. This is the first time the version policy has actually cost me something: some otherwise-good targets are unusable, and the answer key has to be built around what NVD scores under v3.x.
 
-The first plan was a plain match / no-match. Either the product and version
-fit a signature or they didn't. Working through the sample scan showed the
-problem with that. When Nmap reads Apache 2.2.8 and the signature only covers
-2.4.49, the tool has recognised the product, but it can't assert a CVE
-against that version. Calling that no_match hides something the tool knows.
-Calling it a match would just be wrong. So I added a middle tier,
-tool_decided, for exactly this case: product recognised, version outside the
-rule, no CVE asserted. The three statuses now cover every state the tool can
-actually be in. Version comparison uses numeric tuples with zero-padding and
-an inclusive version_max, and it fails closed on anything it can't parse. An
-unparseable version will never silently direct-match.
+Implemented version\_matches with range support and built the matcher out to its three-tier status.
 
-Also for the risk register: OpenVAS integration, listed as a planned scanner
-in the TMA01 proposal, is deferred. The TMA01 risk register already had "fall
-back to Nmap-only" as the contingency for this, and that is now what has
-happened. The normalisation layer stays in place so a second scanner could be
-added later. Trying OpenVAS at this stage would put the core deliverable at
-risk for what is really a scoping addition. Logged as a realised risk.
+The first plan was a plain match / no-match. Either the product and version fit a signature or they didn't. Working through the sample scan showed the problem with that. When Nmap reads Apache 2.2.8 and the signature only covers 2.4.49, the tool has recognised the product, but it can't assert a CVE against that version. Calling that no\_match hides something the tool knows. Calling it a match would just be wrong. So I added a middle tier, tool\_decided, for exactly this case: product recognised, version outside the rule, no CVE asserted. The three statuses now cover every state the tool can actually be in. Version comparison uses numeric tuples with zero-padding and an inclusive version\_max, and it fails closed on anything it can't parse. An unparseable version will never silently direct-match.
+
+Also for the risk register: OpenVAS integration, listed as a planned scanner in the TMA01 proposal, is deferred. The TMA01 risk register already had "fall back to Nmap-only" as the contingency for this, and that is now what has happened. The normalisation layer stays in place so a second scanner could be added later. Trying OpenVAS at this stage would put the core deliverable at risk for what is really a scoping addition. Logged as a realised risk.
 
 ## 2 July 2026
 
-Implemented _roundup for the CVSS calculator. The first draft used
-math.floor(int_val / 10000). That works, but it does the division in floating
-point before flooring. Switched to integer floor division (int_val // 10000)
-so the rounding step stays in integer arithmetic, which matches appendix A of
-the CVSS v3.1 specification (FIRST, 2019). Dropped the math import as a
-result. Tests still to run once base_score is in.
+Implemented \_roundup for the CVSS calculator. The first draft used math.floor(int\_val / 10000). That works, but it does the division in floating point before flooring. Switched to integer floor division (int\_val // 10000\) so the rounding step stays in integer arithmetic, which matches appendix A of the CVSS v3.1 specification (FIRST, 2019). Dropped the math import as a result. Tests still to run once base\_score is in.
 
-Added the scoring stage into the pipeline. For each direct-match finding, the
-CVE's vector string is fetched from NVD and scored by the project's own CVSS
-calculator. NVD's published score is kept as a runtime cross-check: any
-difference beyond 0.05 gets recorded in the finding's notes. This keeps the
-calculator on the critical path as evidence the implementation works. On the
-sample scan, vsftpd (CVE-2011-2523) scores 9.8 Critical and OpenSSH
-(CVE-2018-15473) 5.3 Medium. Both agree with NVD. The tool_decided and
-no_match findings are left unscored on purpose, since no CVE is asserted for
-them.
+Added the scoring stage into the pipeline. For each direct-match finding, the CVE's vector string is fetched from NVD and scored by the project's own CVSS calculator. NVD's published score is kept as a runtime cross-check: any difference beyond 0.05 gets recorded in the finding's notes. This keeps the calculator on the critical path as evidence the implementation works. On the sample scan, vsftpd (CVE-2011-2523) scores 9.8 Critical and OpenSSH (CVE-2018-15473) 5.3 Medium. Both agree with NVD. The tool\_decided and no\_match findings are left unscored on purpose, since no CVE is asserted for them.
 
-Not everything went smoothly. The new scoring module failed to import at
-first (ModuleNotFoundError) because I'd created the file at the top of the
-vulnreport package, not inside its sub-folder. Moving it into
-vulnreport/scoring and adding the package __init__.py fixed it.
+Not everything went smoothly. The new scoring module failed to import at first (ModuleNotFoundError) because I'd created the file at the top of the vulnreport package, not inside its sub-folder. Moving it into vulnreport/scoring and adding the package **init**.py fixed it.
 
-While implementing base_score I initially indexed the impact weights as
-WEIGHTS["C"], WEIGHTS["I"] and WEIGHTS["A"], which don't exist. The
-specification gives Confidentiality, Integrity and Availability the same
-weight table, so the weights dict stores it once under a single "CIA" key.
-Fixing the lookup fixed a KeyError that would have failed every test.
+While implementing base\_score I initially indexed the impact weights as WEIGHTS\["C"\], WEIGHTS\["I"\] and WEIGHTS\["A"\], which don't exist. The specification gives Confidentiality, Integrity and Availability the same weight table, so the weights dict stores it once under a single "CIA" key. Fixing the lookup fixed a KeyError that would have failed every test.
 
-The roundup function needed care. A naive floating-point version rounds some
-valid CVSS intermediates the wrong way (the 0.1 + 0.2 problem noted in
-Appendix A of the specification). I followed the spec's integer-arithmetic
-method instead, scaling by 100,000 before rounding. That is why the
-calculator agrees with NVD's published scores on the close cases.
+The roundup function needed care. A naive floating-point version rounds some valid CVSS intermediates the wrong way (the 0.1 \+ 0.2 problem noted in Appendix A of the specification). I followed the spec's integer-arithmetic method instead, scaling by 100,000 before rounding. That is why the calculator agrees with NVD's published scores on the close cases.
 
 ## 3 July 2026
-Tried the first Vulhub target. Cloned the repo and ran docker compose up on
-httpd/CVE-2021-41773. Apache 2.4.49 came up on port 8080 with no problems.
-Nmap -sV read the service correctly as "Apache httpd 2.4.49". Fed the XML
-into the tool and the report came back with CVE-2021-41773 scored 9.8
-Critical. The expected result, but this time produced end to end from a real
-container, not the bundled sample. One target of seven in the answer key
-done. The interesting ones are still to run: Samba, where Nmap often reports
-a version range with no pinned number, and the patched 2.4.51 negative.
 
-Second Vulhub target done, OpenSSH 7.7 (CVE-2018-15473), though it took a few
-false starts. With the container listening on 20022, Nmap -sV read the banner
-as "OpenSSH 7.7 (protocol 2.0)" and the tool matched CVE-2018-15473 at 5.3
-Medium, agreeing with the answer key. Nmap reported the version as plain 7.7,
-not 7.7p1, so the portable-suffix handling in _parse_version wasn't exercised
-on this target. It's still needed for others, but this didn't test it. Two of
-seven done (Apache 2.4.49 and OpenSSH).
+Tried the first Vulhub target. Cloned the repo and ran docker compose up on httpd/CVE-2021-41773. Apache 2.4.49 came up on port 8080 with no problems. Nmap \-sV read the service correctly as "Apache httpd 2.4.49". Fed the XML into the tool and the report came back with CVE-2021-41773 scored 9.8 Critical. The expected result, but this time produced end to end from a real container, not the bundled sample. One target of seven in the answer key done. The interesting ones are still to run: Samba, where Nmap often reports a version range with no pinned number, and the patched 2.4.51 negative.
 
-### 6 july
-Chased down a proper vsftpd 2.3.4 target and decided against getting it
-tonight. The Docker route was a dead end. It's not in Vulhub. The image I
-tried first (hmlio/vaas-cve-2011-2523) doesn't exist. docker search only
-turned up general-purpose vsftpd images built on CentOS 7 or Debian, and
-those ship 3.0.x, not 2.3.4. The Metasploitable images on Docker Hub are all
-unofficial rebuilds from unknown publishers, and I'm not pulling one onto the
-lab machine just for a version banner. The clean source is the official
-Metasploitable 2 VM from Rapid7, which ships the real 2.3.4 and answers
-220 (vsFTPd 2.3.4). That's a download-and-VM job, not a quick container.
+Second Vulhub target done, OpenSSH 7.7 (CVE-2018-15473), though it took a few false starts. With the container listening on 20022, Nmap \-sV read the banner as "OpenSSH 7.7 (protocol 2.0)" and the tool matched CVE-2018-15473 at 5.3 Medium, agreeing with the answer key. Nmap reported the version as plain 7.7, not 7.7p1, so the portable-suffix handling in \_parse\_version wasn't exercised on this target. It's still needed for others, but this didn't test it. Two of seven done (Apache 2.4.49 and OpenSSH).
 
-Decided not to do that for TMA03. The detection set already stands at three
-direct matches (Apache 2.4.49, Apache 2.4.50, OpenSSH 7.7), one correct
-negative (Apache 2.4.51), and one tool_decided (Samba, where Nmap reports a
-version range so the tool rightly declined to assert a CVE). vsftpd would add
-a fourth true positive, but no detection case the existing three don't
-already cover. It can wait. Carrying it to the EMA as a planned addition:
-stand up the Rapid7 Metasploitable 2 VM, scan port 21, confirm Nmap reads
-2.3.4, and add it as the exact-version-pinned CRITICAL. Open questions for
-then: the VM networking (host-only or bridged, and scan the VM's own IP, not
-localhost), and whether to score only vsftpd or widen the answer key to the
-other services Metasploitable exposes.
+Ran Apache 2.4.50 next and it was clean. Nmap read "Apache httpd 2.4.50" on 8080, and the tool matched CVE-2021-42013 at 9.8, which is what the answer key expects. Third direct match, alongside 2.4.49 and OpenSSH.
 
-Ran Apache 2.4.50 next and it was clean. Nmap read "Apache httpd 2.4.50" on
-8080, and the tool matched CVE-2021-42013 at 9.8, which is what the answer
-key expects. Third direct match, alongside 2.4.49 and OpenSSH.
+Samba was a problem. The container would not start because port 445 was already taken. Windows holds 445 itself for file sharing (the System process, PID 4), so it was not something I could just kill. Remapped the published port to 1445\. First tried a compose override file, but that appended a second port mapping on top of the original, so it still tried to bind 445 and collided. Editing the compose file directly worked. By then I also had a docker run container going, so there were two Sambas up and I had to be careful which one I scanned. Once it was listening on 1445, Nmap reported the version as "3.X \- 4.X", with no pinned number, and the tool returned no CVE. Samba over SMB does not hand Nmap a clean version. Worth knowing for the write-up.
 
-Samba was a problem. The container wouldn't start because port 445 was already
-taken. Windows holds 445 itself for file sharing (the System process, PID 4),
-so it wasn't something I could just kill. Remapped the published port to
-1445. First tried a compose override file, but that appended a second port
-mapping on top of the original, so it still tried to bind 445 and collided.
-Editing the compose file directly worked. By then I also had a docker run
-container going, so there were two Sambas up and I had to be careful which
-one I scanned. Once it was listening on 1445, Nmap reported the version as
-"3.X - 4.X", no pinned number, and the tool returned no CVE. Samba over SMB
-doesn't hand Nmap a clean version. Worth knowing for the write-up.
+At the time I recorded this as a tool\_decided outcome. That was wrong, and I corrected it on 6 July once the evaluation script showed what actually happened — see that entry. The tool never reached the version check at all.
 
-Pulled httpd:2.4.51 for the patched negative and confirmed the container
-starts and binds 8081. Haven't scanned it yet. That's the next job.
+Pulled httpd:2.4.51 for the patched negative and confirmed the container starts and binds 8081\. Haven't scanned it yet. That is the next job, and it means 2.4.51 is not yet a confirmed negative in the results, only a prepared target.
 
-Designed the evaluation approach and settled the classification handling for
-the upcoming evaluation script (vulnreport/evaluate.py). The module itself
-isn't written yet. The plan: run each scan through the existing parse and
-match pipeline, then score the result against a separate answer key. It
-measures detection only, so it needs no NVD calls and runs offline. The
-classification handling is settled too. Precision and recall will only be
-counted over targets where the tool commits to a direct match. tool_decided
-and not-yet-run targets get their own rows, so they aren't forced into binary
-bins. nginx is out, and vsftpd is deferred to the EMA. Computing the metrics
-by hand on the current state gives three true positives (2.4.49, 2.4.50,
-OpenSSH) and one false negative (Samba). That works out at precision 1.00 and
-recall 0.75. The script will automate this.
+(Note on dates: the 2.4.50, Samba and 2.4.51 work above was done during the 3 July session — the generated report headers and scan files carry 3 July timestamps. Some of it was written up from notes on 6 July, which is why it appeared under that date in an earlier version of this log. Moved here to match the file evidence.)
 
-The Samba false negative is worth recording properly, because it points at an
-actual bug in the matcher. The tool missed it because Nmap writes the product
-as "Samba smbd" while my signature says "Samba". The matcher compares the
-product string exactly, so it never even reached the version check. Two fixes
-stack underneath. First, correct the product string. Second, even after that,
-the "3.X - 4.X" version can't be confirmed against the vulnerable range, so
-Samba would still end up as tool_decided. Still to decide: fix the signature
-and rerun, or report the false negative as it stands and explain it.
+## 6 July 2026
 
-### 7 july
-this entry counts Apache 2.4.49 as a direct match three times, including in the hand-computed metrics (TP=3, recall 0.75). That was wrong — 2.4.49 was never scanned and it was formally deferred to the EMA on 7 July. The true state on 6 July was two direct matches (2.4.50, OpenSSH). The vsftpd deferral decision above therefore rested on a smaller detection set than stated, though the decision stands on the same redundancy reasoning. Actual evaluation results are in the 7 July entry and reports/evaluation.md.
-Correction (7 July, revised): an earlier version of this note said 2.4.49 was never scanned. That was wrong — it was scanned on 3 July and the tool's report survives (reports/vulhub_apache_2449.md), but the scan XML was not retained. Without the input file it cannot be re-run in the automated evaluation, so it appears as not_run in reports/evaluation.md and is deferred to the EMA, where it will be rescanned with evidence kept. The "three direct matches" count in this entry was therefore true at the time; the headline TP=2 reflects what the evaluation harness can reproduce, not what was found.
+Chased down a proper vsftpd 2.3.4 target and decided against getting it tonight. The Docker route was a dead end. It is not in Vulhub. The image I tried first (hmlio/vaas-cve-2011-2523) does not exist. A docker search only turned up general-purpose vsftpd images built on CentOS 7 or Debian, and those ship 3.0.x, not 2.3.4. The Metasploitable images on Docker Hub are all unofficial rebuilds from unknown publishers, and I am not pulling one onto the lab machine just for a version banner. The clean source is the official Metasploitable 2 VM from Rapid7, which ships the real 2.3.4 and answers 220 (vsFTPd 2.3.4). That is a download-and-VM job, not a quick container.
+
+Decided not to do that for TMA03. The detection set stands at three direct matches (Apache 2.4.49, Apache 2.4.50, OpenSSH 7.7), one prepared but unscanned negative (Apache 2.4.51), and Samba still to be resolved. vsftpd would add a fourth true positive, but no detection case the existing three do not already cover. It can wait. Carrying it to the EMA as a planned addition: stand up the Rapid7 Metasploitable 2 VM, scan port 21, confirm Nmap reads 2.3.4, and add it as the exact-version-pinned CRITICAL. Open questions for then: the VM networking (host-only or bridged, and scan the VM's own IP, not localhost), and whether to score only vsftpd or widen the answer key to the other services Metasploitable exposes.
+
+Went back to the Samba result and worked out why it really failed. On 3 July I had put it down as tool\_decided — product recognised, version unconfirmable. That was wrong. Nmap writes the product as "Samba smbd", and my signature says "Samba". The matcher compares the product string exactly, so the two never matched and it never reached the version check at all. The correct status is no\_match, which makes Samba a false negative, not a graceful decline. Two fixes stack underneath. First, correct the product string so Nmap's "Samba smbd" is recognised. Second, even after that, the "3.X \- 4.X" version cannot be confirmed against the vulnerable range, so Samba would then land as tool\_decided rather than a direct match. Still to decide: fix the signature and rerun, or report the false negative as it stands and explain it. Either is defensible; reporting it and then fixing it shows the self-review, which is probably the stronger account.
+
+## 7 July 2026
+
+Built and ran the evaluation script (vulnreport/evaluate.py). It runs each scan through the existing parse and match pipeline and scores the result against the separate answer key. It measures detection only, so it needs no NVD calls and runs offline. Precision and recall are counted only over targets where the tool commits to a direct match; tool\_decided and not-run targets get their own rows rather than being forced into a bin.
+
+Running it turned up a problem with yesterday's hand-calculated figures. The Apache 2.4.49 scan XML from 3 July was not retained — the generated report survives in the reports folder, but the evaluation harness needs the raw XML to reproduce the result, and without it the script can only mark 2.4.49 as not\_run. So the hand figures were over-counted by one true positive.
+
+I have left 2.4.49 as not\_run for now rather than trust a result I cannot reproduce, and deferred a clean rescan to the EMA. That drops the reproducible true positives from three to two (Apache 2.4.50 and OpenSSH 7.7), with the one Samba false negative, giving precision 1.00 and recall 0.67 on what the tool can actually verify on disk. The vsftpd deferral still holds under the smaller set, since the reasoning for it did not depend on the count. Lesson for the rest: keep the raw scan input, not just the generated report, or the result cannot be checked later.
+
+## 8 July 2026
+
+Mainly rewriting the TMA03 document to catch up with the changes in the project. Reworked the design-decisions narrative and started folding the evaluation results in. No code changes. This was slower than expected — the document had drifted behind the code, so a fair amount of it needed rewriting rather than extending.
+
+## 9 July 2026
+
+Tutor replied to the ethics query: the checklist needs updating (informed consent item among others), no resubmission needed, updated form to go in the appendix with a note. He also reframed the planned user session as elicitation rather than validation: use the prototype and its report as the instrument to extract requirements for how the system should present itself. Replied confirming that approach.
+
+Ran the session with one surrogate user (IT worker, Python-proficient, verbal consent, no personal data). NFR3: task succeeded on first attempt, about four minutes, via the README then \--help; finding: the entry point is not discoverable from the filesystem alone. Elicitation produced five candidate requirements for the EMA — plain-English CVE descriptions, fixed-in versions, a severity-ordered multi-host summary, a clearer tool\_decided label, and non-colour-reliant severity emphasis — recorded in docs/evidence/session\_note\_2026-07-08.md. The Samba unconfirmed report was understood correctly without prompting, which is the fail-closed design communicating as intended.
+
+## 10 to 14 July 2026
+
+(Reconstructed on 4 August from memory; I did not keep daily notes through this stretch.)
+
+Finishing and editing the TMA03 document for the 14 July cut-off. This was writing and revision rather than development — pulling the evaluation results, the design decisions and the user session into the report and tidying the structure as far as time allowed.
+
+On the Samba question from 6 July, I submitted with the false negative reported as it stood rather than fixing the signature first, on the reasoning that the result and its cause were worth showing. The fix itself is carried to the EMA.
+
+Honest note on this stretch: I know from the TMA03 feedback that the structure and signposting were where it fell down — requirements left embedded in prose rather than surfaced in a table, and the architecture discussion placed away from the diagram it explains. Writing and document structure are the parts of this project I find hardest, where the technical work comes more naturally, and that shows in the submitted document. That is a fixable problem for the EMA rather than a fixed one: the fix is structural — tables, diagrams and signposting — not a matter of writing more.
+
+## 14 July to 3 August 2026
+
+(Reconstructed on 4 August.)
+
+No project work on the vulnerability tool during this period. TMA03 was submitted on 14 July, and I had another module's TMA due in this window, so I focused on that and paused this project while waiting for feedback. Recording the pause honestly rather than leaving a silent gap: there was no development, and none was planned until the feedback came back.
+
+## 3 August 2026
+
+Collected the TMA03 feedback: 68%. Marks by learning outcome were LO2 14, LO4/6/7 13, LO1 13, LO8 14, LO3/9 14\.
+
+Reaction, honestly: mixed. The technical work was recognised, which was good to see, but the strongest criticisms were all about the writing and structure — confusing structure, requirements he could not find, and a gap between the literature and my own contribution. I have to own that. Writing has never been my strong point, and where I read the feedback carefully rather than defensively, most of it is fair. The requirements were genuinely in the report, at 4.7, but buried in prose where a marker would not spot them, so "I don't see them" is really a comment on how I presented them, not whether they were there. The same goes for the literature-to-design gap: the reasoning exists but I did not join it up on the page.
+
+Two things I want to carry into the EMA from this. First, the fixes are structural and mechanical — tables, diagrams, reordering, signposting — not a matter of being unable to write, so I should not frame it as a fixed weakness. Second, the marks are heavily in the Project Work section (LO1 and LO11, 40 marks between them in the EMA scheme), which is exactly where the structural problems sit, so that is where the effort goes.
+
+Started EMA preparation. Emailed Apkar my availability for August to arrange the discussion session he asked for, from my OU account. Read back through the per-LO feedback, the PT3 summary and the in-document comments, and drafted a task list and rough schedule for the run to the 14 September cut-off. Began this log repair as part of that, since LO5 needs the weekly record and it had drifted during the July writing and the wait.  
+
+
+## 4 August 2026
+
+Rescanning the outstanding Apache targets
+
+Started by closing the two gaps left at TMA03. Docker Desktop was not running to begin with, which took a few minutes to spot: the client answered but there was no server, and no whale in the tray. Worth remembering that docker version returning a Client section but no Server means the engine is down rather than anything being broken.
+
+Apache 2.4.49 came up on 8080 from the Vulhub environment. Nmap read it as "Apache httpd 2.4.49 ((Unix))" and the tool matched CVE-2021-41773 at 9.8 Critical, agreeing with the answer key. This time I kept the XML as apache2449.xml in the repo root, which was the whole point. The 7 July loss came from keeping only the generated report, so the result could not be reproduced by the evaluation script.
+
+Then the patched negative. Brought up stock httpd:2.4.51 on 8081. The docker run was refused at first because the container name was still held by the stopped container created on 3 July when testing whether the image pulled; docker rm apache2451-test cleared it. Nmap read the version as 2.4.51 rather than a bare "Apache httpd", which matters: had the image been running ServerTokens Prod, the tool would have declined for lack of a version rather than because it recognised a patched one, and the negative would have passed for the wrong reason. The report came back with no confirmed vulnerability and the service listed as tool_decided, "known product, version outside the signature's range". That is the correct decline, and it is the control showing the tool is not simply flagging everything.
+
+A false negative I had been carrying in my head turned out to be already fixed. Samba now returns tool_decided rather than no_match, which means the signature product string was corrected at some point during the TMA03 writing week. The matcher recognises Nmap's "Samba smbd", reaches the version check, finds "3.X - 4.X" unresolvable against the vulnerable range, and declines with a reason. That is what the three-tier design was for.
+
+PEP 8 compliance (NFR6)
+
+Set up flake8 to check style properly rather than assuming it. The first run reported 38 violations, 30 of them line-length complaints against the default 79-character limit. Added a setup.cfg setting the project limit to 99, which is a documented convention rather than a workaround: the default dates from terminal-era constraints and most current Python tooling uses 88 or more.
+
+That left 8 substantive issues, now all fixed. One was an unused math import in calculator.py, which the 2 July log entry said had been removed. It had not, so that entry recorded an intention rather than what happened. The others were three over-indented continuation lines, two missing end-of-file newlines, a redundant blank line, and one genuinely over-long line in evaluate.py.
+
+Rewrote the exploitability calculation to use bracketed continuation rather than backslashes. This briefly broke the file with an IndentationError before I noticed the opening line was indented six spaces instead of four. Since that edit touched the scoring arithmetic, I re-ran the test suite: 38 passing, so behaviour was unchanged. flake8 now reports zero violations, so NFR6 can be evidenced with tool output rather than asserted.
+
+Also noted that pytest lives in the project's .venv, not globally, and that the day's earlier work had been run against the global Python. The evidence for the report should be produced inside the documented environment.
+
+vsftpd 2.3.4 via Metasploitable 2
+
+Stood up the Rapid7 Metasploitable 2 VM to get the vsftpd target deferred at TMA03. VirtualBox was already installed. Metasploitable ships as VMware files, so rather than importing the .vmx I created a new VM and attached the existing .vmdk as its disk, which VirtualBox handles without conversion.
+
+Set the network adapter to host-only rather than NAT or bridged. That gives the VM an address the Windows host can reach while leaving it no route out, which matters for a machine that is deliberately riddled with vulnerabilities. The adapter showed DHCP as disabled but the VM picked up 192.168.56.101 anyway, so no static configuration was needed.
+
+Nmap read the FTP banner as "vsftpd 2.3.4" with no ambiguity, and the tool matched CVE-2011-2523 at 9.8 Critical, agreeing with the answer key. This is the only target in the set where an exact pinned version drives the match rather than a range, which is a different matching case from the others.
+
+Position at the end of the day
+
+The evaluation now covers six of seven targets: 4 true positives, 0 false positives, 0 false negatives, 1 true negative, 1 tool_decided (Samba), and 1 not run (nginx, excluded with reasons recorded on 6 July). Precision 1.00 and recall 1.00 over four committed targets.
+
+Two things to carry into the write-up. First, recall reads 1.00 because it is computed only over targets where the tool commits to a direct match; Samba sits outside that denominator by design, on the reasoning that penalising the tool for honestly declining an unresolvable version would be perverse. I still think that is right, but the report needs to state the denominator explicitly rather than quoting a bare 1.00, and give the Samba case its own paragraph. A marker who has not followed the reasoning could otherwise read it as the metric being shaped to produce a clean number. Question for Apkar on the call: whether he would expect the declined case counted in recall or reported separately.
+
+Second, the vsftpd scan targets 192.168.56.101 rather than 127.0.0.1, and is the first in the set to do so. NFR5's fit criterion currently says every retained scan targets 127.0.0.1 on ports published by project lab containers, which no longer describes the evidence. The isolation claim still holds — a host-only adapter with no route to the internet is arguably stronger isolation than a published Docker port on the development machine — but the criterion needs rewording to cover both the container targets and the VM.
+
+
+
+## 17 August 2026
+
+Produced the report evidence for the EMA, inside the documented .venv as planned. Regenerated the apache-2.4.50 and Samba reports and re-ran the evaluation script in one terminal session, and captured the whole session as a screenshot for the report. The evaluation reproduced the Table 7 numbers exactly: 4 TP, 0 FP, 0 FN, 1 TN, precision and recall 1.00 over committed matches, Samba as the one tool_decided case, nginx recorded as not run.
+
+One thing the fresh Samba report showed up. Its notes column says "known product, version outside the signature's range", but that is not what the matcher did. The version string 3.X - 4.X fails parsing, so the tool failed closed without ever comparing against the range. The evaluation report words it correctly ("no pinned version from Nmap"). The report builder's note conflates the two decline reasons, which is the same refinement already recorded as deferred in the design notes. Either the note gets split into the two cases before submission, or the conflation gets stated as a known limitation in the report. Decision pending.
+
+## 20 August 2026
+
+EMA writing. Rewrote Section 5 into past tense as an account of what was actually done, with fuller coverage of data protection around the surrogate session, the dual-use consideration, professional conduct in the reporting, and EDI, including the honest limitation that one technical participant elicited the requirements. Added an impact statement to Section 1 covering adoption effects, the over-trust risk and the maintenance commitment, not just benefits. Added the three generated files verbatim as a new appendix and referenced it from the main body.
+
+Still outstanding: the mechanical fixes pass through the whole document (figure renumbering, the NFR5 appendix wording, contents page), and the email to the tutor covering August availability and whether verbal consent needs backing with a written consent form for one informal session.
