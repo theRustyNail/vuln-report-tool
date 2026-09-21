@@ -69,7 +69,7 @@ vsftpd backdoor (9.8). Operationally those two failures are very different.
 With unreported targets contributing their expected score as error, MAE
 weights each failure by its severity. That is closer to what a user of the
 report actually cares about. It also fits the justification already cited in
-TMA02: Willmott and Matsuura (2005) favour MAE because it weights errors
+Earlier plan: Willmott and Matsuura (2005) favour MAE because it weights errors
 linearly, without letting large ones dominate, and that is the behaviour
 wanted here.
 
@@ -83,10 +83,9 @@ nothing.
 The evaluation module must compute MAE over all answer-key targets, using the
 unmatched-scores-as-zero convention. The patched negative is excluded from
 the score error, since it belongs to precision and recall. The results need a
-per-target table of expected score, tool score and error. The TMA03 and EMA
-write-ups should state the limitation and the redefinition directly, so the
-marker isn't left to raise it. The Key Terms glossary carried over from TMA02
-loses its RMSE entry.
+per-target table of expected score, tool score and error. The project report
+should state the limitation and the redefinition directly rather than leave
+the reader to raise it. The Key Terms glossary loses its RMSE entry.
 
 ## 2026-07-07 — MAE retired; the evaluation measures detection
 
@@ -98,7 +97,7 @@ but score error is no longer an evaluation metric.
 
 **Reasoning.**
 
-TMA02 proposed MAE between the tool's assigned CVSS scores and the NVD
+The earlier plan proposed MAE between the tool's assigned CVSS scores and the NVD
 baseline as the primary metric. The 2 July entry found the circular flaw in
 that and tried to rescue the metric by redefining it over the whole answer
 key. On further review, the flaw goes deeper than the redefinition can fix.
@@ -108,7 +107,7 @@ vector is retrieved from the same NVD source (via the local cache) that
 supplies the baseline. So for any correctly matched finding, the two numbers
 have to agree. That agreement shows the calculator implements the
 specification correctly. It says nothing about whether the tool found the
-right vulnerabilities. The TMA02 rationale would have held for a tool that
+right vulnerabilities. That rationale would have held for a tool that
 estimated severity independently. This prototype doesn't, so the comparison
 is settled before it is run. MAE is retired, and precision and recall over
 detection take its place.
@@ -127,6 +126,6 @@ vulnerability. That tool_decided outcome is counted as a true negative, with
 a caveat recorded alongside it: the tool reached the right answer by failing
 to match a signature. It did not actively recognise the patch.
 
-The TMA03 and EMA write-ups must present this as a change from the TMA02
+The project report must present this as a change from the earlier
 plan, with the circularity given as the reason, and the 2 July entry's
 per-target score table is no longer needed.

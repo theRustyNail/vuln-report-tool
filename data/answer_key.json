@@ -1,5 +1,5 @@
 {
-  "_about": "Answer key for the TM470 vulnerability-tool evaluation.",
+  "_about": "Answer key for the detection evaluation.",
   "cvss_source": "NVD v3.x base score via vulnreport.nvd.client.get_cvss",
   "targets": [
     {

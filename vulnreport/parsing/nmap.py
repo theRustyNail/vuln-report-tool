@@ -1,6 +1,6 @@
 """Nmap XML parser.
 
-Adapted from the v0.1 prototype in the TMA01 exploratory work. Reads an Nmap
+Adapted from the v0.1 exploratory prototype. Reads an Nmap
 XML file and returns a list of Finding objects.
 """
 
